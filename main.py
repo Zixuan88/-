@@ -1,4 +1,3 @@
-%%writefile main.py
 #!/usr/bin/env python3
 """
 自動偵測今日最高降雨機率，超過門檻就透過 Telegram 提醒帶傘。
@@ -16,7 +15,7 @@ LATITUDE = 25.0330
 LONGITUDE = 121.5654
 TIMEZONE = "Asia/Taipei"
 
-# 降雨機率門檻（想改成 60 就改這裡）
+# 降雨機率門檻（題目標題寫 70%，內文寫 60%，這裡預設 70，可自行調整）
 RAIN_THRESHOLD = 70
 # ==========================================
 
@@ -29,7 +28,7 @@ def get_today_max_precipitation_probability(lat: float, lon: float, timezone: st
         "longitude": lon,
         "daily": "precipitation_probability_max",
         "timezone": timezone,
-        "forecast_days": 1,
+        "forecast_days": 1,   # 只要今天
     }
 
     try:
@@ -37,6 +36,7 @@ def get_today_max_precipitation_probability(lat: float, lon: float, timezone: st
         resp.raise_for_status()
         data = resp.json()
 
+        # daily.precipitation_probability_max 是陣列，第一個元素就是今天
         probs = data.get("daily", {}).get("precipitation_probability_max", [])
         if not probs:
             print("API 回傳沒有降雨機率資料")
@@ -49,7 +49,7 @@ def get_today_max_precipitation_probability(lat: float, lon: float, timezone: st
 
 
 def send_telegram_message(bot_token: str, chat_id: str, message: str) -> bool:
-    """發送 Telegram 訊息"""
+    """發送 Telegram 訊息（Token 與 Chat ID 從環境變數傳入）"""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         "chat_id": chat_id,
@@ -68,6 +68,7 @@ def send_telegram_message(bot_token: str, chat_id: str, message: str) -> bool:
 
 
 def main():
+    # 從環境變數讀取敏感資訊（絕對不能寫死在程式碼）
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
