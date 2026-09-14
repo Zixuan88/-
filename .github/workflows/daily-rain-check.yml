@@ -1,0 +1,33 @@
+name: Daily Rain Probability Check
+
+on:
+  schedule:
+    # 每天台灣時間早上 7:00 執行（UTC 23:00 前一天）
+    # 可依需求調整 cron 時間
+    - cron: "0 23 * * *"
+  workflow_dispatch:   # 允許手動觸發測試
+
+jobs:
+  check-rain:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run rain check & notify
+        env:
+          # 從 GitHub Secrets 讀取，絕不出現在程式碼中
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
